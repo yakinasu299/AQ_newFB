@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+<!-- This site is hosted on Netlify. Anyone can build and deploy a site
+     like this one for free: https://netlify.new/?utm_campaign=loops&utm_source=ai-legible&utm_medium=owned&utm_content=comment&utm_id=a67bbb21-8eac-479c-946a-5ac6d8760b1e
+     Netlify hosting facts for this site: static/SSR served via Netlify Edge. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AQ 所見ジェネレーター</title>
+  <meta name="description" content="AQの得点データを入力すると、所見文を自動生成するツールです。">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #ffffff;
+      --surface: rgba(0,0,0,0.03);
+      --surface-hover: rgba(0,0,0,0.06);
+      --border: rgba(0,0,0,0.12);
+      --accent: #5b4de0;
+      --accent-glow: rgba(91,77,224,0.2);
+      --accent2: #0d9e7a;
+      --text: #1a1a2e;
+      --text-muted: #5a5870;
+      --radius: 16px;
+      --shadow: 0 8px 32px rgba(0,0,0,0.4);
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Noto Sans JP', 'Inter', sans-serif;
+      min-height: 100vh;
+      padding: 0 0 60px;
+      background-image:
+        radial-gradient(ellipse at 20% 10%, rgba(91,77,224,0.05) 0%, transparent 55%),
+        radial-gradient(ellipse at 80% 90%, rgba(13,158,122,0.04) 0%, transparent 50%);
+    }
+    header {
+      text-align: center;
+      padding: 52px 20px 36px;
+      position: relative;
+    }
+    header::after {
+      content: '';
+      display: block;
+      width: 120px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      margin: 24px auto 0;
+    }
+    .badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent2);
+      background: rgba(91,229,197,0.1);
+      border: 1px solid rgba(91,229,197,0.25);
+      padding: 4px 14px;
+      border-radius: 100px;
+      margin-bottom: 16px;
+    }
+    h1 {
+      font-size: clamp(24px, 4vw, 40px);
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      color: var(--accent);
+    }
+    .subtitle { margin-top: 10px; color: var(--text-muted); font-size: 14px; }
+    .container { max-width: 900px; margin: 0 auto; padding: 0 20px; }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      margin-bottom: 20px;
+      backdrop-filter: blur(12px);
+      box-shadow: var(--shadow);
+      transition: border-color 0.2s;
+    }
+    .card:hover { border-color: rgba(255,255,255,0.14); }
+    .card-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 14px;
+    }
+    textarea {
+      width: 100%;
+      background: rgba(0,0,0,0.03);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: 'Noto Sans JP', monospace;
+      font-size: 13.5px;
+      line-height: 1.8;
+      padding: 16px;
+      resize: vertical;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    #input-area    { min-height: 200px; }
+    #findings-area { min-height: 380px; }
+    .btn-row {
+      display: flex;
+      gap: 12px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    button {
+      cursor: pointer;
+      border: none;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 12px 24px;
+      transition: all 0.18s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), #9d6ff7);
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(124,106,247,0.35);
+    }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(124,106,247,0.5); }
+    .btn-primary:active { transform: translateY(0); }
+    .btn-secondary {
+      background: var(--surface-hover);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.18); }
+    .btn-copy {
+      background: linear-gradient(135deg, #1f6f5c, var(--accent2));
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(91,229,197,0.25);
+    }
+    .btn-copy:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(91,229,197,0.4); }
+    .copy-feedback { font-size: 13px; color: var(--accent2); opacity: 0; transition: opacity 0.3s; }
+    .copy-feedback.show { opacity: 1; }
+    .section-divider { border: none; border-top: 1px solid var(--border); margin: 8px 0 20px; }
+    .hint {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 10px;
+      line-height: 1.7;
+    }
+    @media(max-width:600px){
+      .card { padding: 20px; }
+      .btn-row { flex-direction: column; }
+      button { width: 100%; justify-content: center; }
+    }
+    @keyframes fadeUp {
+      from { opacity:0; transform:translateY(12px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+    .fade-up { animation: fadeUp 0.4s ease both; }
+  </style>
+</head>
+<body>
+<header>
+  <div class="badge">心理検査ツール</div>
+  <h1>AQ 所見ジェネレーター</h1>
+  <p class="subtitle">得点データをテキストで貼り付けると、所見文を自動で生成します</p>
+</header>
+
+<div class="container">
+  <div class="card">
+    <div class="card-label">📋 AQ データを貼り付け</div>
+    <textarea id="input-area" placeholder="■ AQ
+総合　　　　　33点/50点（カットオフ33点）
+社会的スキル　 9点/10点（カットオフ 6点）
+注意の切り替え　8点/10点（カットオフ 7点）
+細部への関心　 7点/10点（カットオフなし）
+コミュニケーション　6点/10点（カットオフ 6点）
+想像力　　　　 3点/10点（カットオフ 6点）"></textarea>
+    <p class="hint">※「総合」「社会的スキル」「注意の切り替え」「細部への関心」「コミュニケーション」「想像力」の各行を含む形式で貼り付けてください。</p>
+    <div class="btn-row">
+      <button class="btn-primary" onclick="parseAndGenerate()"><span>✦</span> 所見を生成する</button>
+      <button class="btn-secondary" onclick="clearAll()">クリア</button>
+    </div>
+  </div>
+
+  <div class="card" id="findings-section" style="display:none">
+    <div class="card-label">📝 所見（編集可能）</div>
+    <hr class="section-divider">
+    <textarea id="findings-area"></textarea>
+    <div class="btn-row">
+      <button class="btn-copy" onclick="copyFindings()"><span>📄</span> テキストをコピー</button>
+      <span class="copy-feedback" id="copy-feedback">✓ コピーしました</span>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── パース ──────────────────────────────────
+function parseScores(text) {
+  const scores = {
+    total: null, social: null, attention: null,
+    detail: null, communication: null, imagination: null,
+    totalCO: null, socialCO: null, attentionCO: null,
+    communicationCO: null, imaginationCO: null
+  };
+
+  for (const line of text.split('\n')) {
+    // 総合: 33点/50点（カットオフ33点）
+    let m = line.match(/総合.+?(\d+)点[^\d]/);
+    if (m) scores.total = parseInt(m[1]);
+    m = line.match(/総合.+?カットオフ\s*(\d+)点/);
+    if (m) scores.totalCO = parseInt(m[1]);
+
+    // 社会的スキル: 9点/10点（カットオフ 6点）
+    m = line.match(/社会的スキル.+?(\d+)点[^\d]/);
+    if (m) scores.social = parseInt(m[1]);
+    m = line.match(/社会的スキル.+?カットオフ\s*(\d+)点/);
+    if (m) scores.socialCO = parseInt(m[1]);
+
+    // 注意の切り替え
+    m = line.match(/注意の切り替え.+?(\d+)点[^\d]/);
+    if (m) scores.attention = parseInt(m[1]);
+    m = line.match(/注意の切り替え.+?カットオフ\s*(\d+)点/);
+    if (m) scores.attentionCO = parseInt(m[1]);
+
+    // 細部への関心
+    m = line.match(/細部への関心.+?(\d+)点[^\d]/);
+    if (m) scores.detail = parseInt(m[1]);
+
+    // コミュニケーション
+    m = line.match(/コミュニケーション.+?(\d+)点[^\d]/);
+    if (m) scores.communication = parseInt(m[1]);
+    m = line.match(/コミュニケーション.+?カットオフ\s*(\d+)点/);
+    if (m) scores.communicationCO = parseInt(m[1]);
+
+    // 想像力
+    m = line.match(/想像力.+?(\d+)点[^\d]/);
+    if (m) scores.imagination = parseInt(m[1]);
+    m = line.match(/想像力.+?カットオフ\s*(\d+)点/);
+    if (m) scores.imaginationCO = parseInt(m[1]);
+  }
+  return scores;
+}
+
+// ── 4段階判定 ──────────────────────────────────
+// max: その項目の満点, co: 目安の値
+// 大幅に上回る: co+(max-co)*0.5以上, 上回る: co以上, 下回る: co*0.5以上, 大幅に下回る: co*0.5未満
+function grade(score, co, max) {
+  if (score == null || co == null) return null;
+  const bigHigh = co + (max - co) * 0.5;
+  const bigLow  = co * 0.5;
+  if (score >= bigHigh) return 'vhigh';
+  if (score >= co)      return 'high';
+  if (score >= bigLow)  return 'low';
+  return 'vlow';
+}
+
+// ── 所見生成（新フォーマット版 2026-11-15） ────────────────────────────────
+// 上回る／大きく上回る: 〇困りごと / 〇対策とアドバイス
+// 下回る／大きく下回る: 〇強み・特徴 / 〇活かせる場面
+// 例外: 細部への関心が高系の場合は 〇強み・特徴 / 〇困りごと / 〇対策とアドバイス
+function generateFindings(sc) {
+const { total, totalCO, social, socialCO, attention, attentionCO,
+detail, communication, communicationCO, imagination, imaginationCO} = sc;
+
+const parts = [];
+
+const gTotal = grade(total, totalCO, 50);
+const gSocial = grade(social, socialCO, 10);
+const gAttn = grade(attention, attentionCO, 10);
+const gComm = grade(communication, communicationCO, 10);
+const gImag = grade(imagination, imaginationCO, 10);
+// 細部への関心はカットオフなし: 満点10点, 目安5点として計算
+const gDetail = grade(detail, 5, 10);
+
+const totalHigh = gTotal === 'vhigh' || gTotal === 'high';
+const anyHigh = [gSocial, gAttn, gComm, gImag, gDetail]
+.some(g => g === 'vhigh' || g === 'high');
+
+// ── 総合判定・冒頭 ──
+if (total!= null) {
+if (totalHigh) {
+parts.push(
+'【所見】AQ総合得点は' + total + '点と**カットオフ値を上回り、ASD傾向がうかがえる**結果となりました。\n' +
+'以下に各下位項目の特徴と、日常生活で取り入れられる工夫をお伝えします。'
+);
+} else if (anyHigh) {
+parts.push(
+'【所見】AQ総合得点は' + total + '点と**カットオフ値を下回り、ASD傾向はうかがえない**結果となりました。\n' +
+'ただし、下位項目を見ると、場面によってはASD特性を感じることがあるかもしれません。以下に詳しく説明します。'
+);
+} else {
+parts.push(
+'【所見】AQ総合得点は' + total + '点と**カットオフ値を下回り、ASD傾向はうかがえない**結果となりました。\n' +
+'以下に各下位項目について詳しく説明します。'
+);
+}
+}
+
+// ── 社会的スキル ──
+if (social!= null) {
+if (gSocial === 'vhigh') {
+parts.push(
+'**「社会的スキル」**は目安の値を大きく上回る結果でした。\n\n' +
+'〇困りごと\n' +
+'・人との関わりの中で、どのように立ち振る舞えばよいかとっさに判断しにくい\n' +
+'・その場にふさわしい話題を思いつくことが難しい場面が多い\n' +
+'・人との関わりのあとにどっと疲れが出やすい\n' +
+'・初対面の相手との会話で強い緊張を感じやすい\n' +
+'・環境の刺激が多い場面や、複数の人と同時に関わる状況で特に目立ちやすい\n\n' +
+'〇対策とアドバイス\n' +
+'・会話のパターンをあらかじめ複数準備しておく\n' +
+'・人と関わる前に心の準備をする時間を設ける\n' +
+'・やり取りのあとには必ず一人でリセットできる時間を確保する'
+);
+} else if (gSocial === 'high') {
+parts.push(
+'**「社会的スキル」**は目安の値を上回る結果でした。\n\n' +
+'〇困りごと\n' +
+'・人との関わりの中で、どのように立ち振る舞えばよいかとっさに判断しにくい\n' +
+'・その場にふさわしい話題を思いつくことが難しい\n' +
+'・人との関わりのあとに疲れを感じやすかったり、初対面の相手との会話で緊張しやすい\n\n' +
+'〇対策とアドバイス\n' +
+'・よく聞かれる質問の答えを事前に考えておく\n' +
+'・人と関わる場面の前後に一人でリセットできる時間を設ける'
+);
+} else if (gSocial === 'low') {
+parts.push(
+'**「社会的スキル」**は目安の値を下回る結果でした。\n\n' +
+'〇強み・特徴\n' +
+'・人との関わりにおいて比較的スムーズにやり取りができる\n' +
+'・初対面の相手とも自然に会話を始めやすい\n' +
+'・その場の雰囲気を読みながら柔軟に対応できる\n\n' +
+'〇活かせる場面\n' +
+'・職場や日常の人間関係の場面'
+);
+} else {
+parts.push(
+'**「社会的スキル」**は目安の値を大きく下回る結果でした。\n\n' +
+'〇強み・特徴\n' +
+'・対人場面での柔軟さや適応力が非常に高い\n' +
+'・初対面の相手ともすぐに打ち解けやすい\n' +
+'・場の空気を自然に読んで行動できる\n\n' +
+'〇活かせる場面\n' +
+'・さまざまな場面で周囲との橋渡し役を担う場面'
+);
+}
+}
+
+// ── 注意の切り替え ──
+if (attention!= null) {
+if (gAttn === 'vhigh') {
+parts.push(
+'**「注意の切り替え」**は目安の値を大きく上回る結果でした。\n\n' +
+'〇困りごと\n' +
+'・取り組んでいることから別のことへ意識を切り替えることに、強い難しさを感じやすい\n' +
+'・急な予定変更や割り込みの作業が生じたとき、気持ちの切り替えにかなりの時間とエネルギーを要することがある\n' +
+'・決まったやり方や手順が変わることへの抵抗感が強く、変化の多い環境では消耗しやすい\n\n' +
+'〇対策とアドバイス\n' +
+'・同じことを繰り返しやすい職場環境を選ぶ\n' +
+'・1日の流れをできるだけルーティン化する\n' +
+'・変更が生じる可能性がある場合は、あらかじめ複数のシナリオを準備しておく'
+);
+} else if (gAttn === 'high') {
+parts.push(
+'**「注意の切り替え」**は目安の値を上回る結果でした。\n\n' +
+'〇困りごと\n' +
+'・取り組んでいることから別のことへ移るのに、時間がかかることがある\n' +
+'・急な予定変更や予期しない出来事に直面したとき、気持ちの整理に少し手間取る場面がある\n\n' +
+'〇対策とアドバイス\n' +
+'・1日のスケジュールをあらかじめ決めておく\n' +
+'・変更が生じた際の代替案を考えておく'
+);
+} else if (gAttn === 'low') {
+parts.push(
+'**「注意の切り替え」**は目安の値を下回る結果でした。\n\n' +
+'〇強み・特徴\n' +
+'・状況の変化への対応が比較的柔軟に行えている\n' +
+'・予定が変わったときも気持ちを切り替えやすい\n' +
+'・新しい状況に素早く適応できる\n\n' +
+'〇活かせる場面\n' +
+'・変化の多い環境\n' +
+'・臨機応変な対応が求められる場面'
+);
+} else {
+parts.push(
+'**「注意の切り替え」**は目安の値を大きく下回る結果でした。\n\n' +
+'〇強み・特徴\n' +
+'・状況の変化への適応力が非常に高い\n' +
+'・急な予定変更や予期しない出来事にも動じにくい\n' +
+'・さまざまな状況に即座に対応できる柔軟さが際立っている\n\n' +
+'〇活かせる場面\n' +
+'・マルチタスクや変化の激しい環境'
+);
+}
+}
+
+// ── 細部への関心 ──
+if (detail!= null) {
+if (gDetail === 'vhigh') {
+parts.push(
+'**「細部への関心」**は目安の値を大きく上回る結果でした。\n\n' +
+'〇強み・特徴\n' +
+'・物事の細かな部分や微妙な変化に非常に気づきやすい\n' +
+'・周囲の人が見逃しがちな小さな違いや変化を敏感にキャッチできる\n\n' +
+'〇困りごと\n' +
+'・環境の刺激が多いと気になることが増え、集中が途切れやすくなることがある\n' +
+'・刺激が多い環境では疲弊しやすくなることがある\n\n' +
+'〇対策とアドバイス\n' +
+'・イヤホンや仕切りを使って刺激を積極的に遮断する\n' +
+'・細部への気づきを活かせる役割（確認作業・品質管理・校正など）を意識的に担う\n' +
+'・刺激の少ない落ち着いた環境で作業できるよう整える'
+);
+} else if (gDetail === 'high') {
+parts.push(
+'**「細部への関心」**は目安の値を上回る結果でした。\n\n' +
+'〇強み・特徴\n' +
+'・物事の細かな部分や微妙な変化に気づきやすい\n' +
+'・周囲の人が見逃しがちなことを敏感にキャッチできる\n\n' +
+'〇困りごと\n' +
+'・環境の刺激が多いと気になってしまい、集中が途切れやすくなることがある\n\n' +
+'〇対策とアドバイス\n' +
+'・イヤホンや仕切りを使って刺激を減らす環境を整える\n' +
+'・細部への気づきを活かせる役割を積極的に担う'
+);
+} else if (gDetail === 'low') {
+parts.push(
+'**「細部への関心」**は低めの傾向でした。\n\n' +
+'〇強み・特徴\n' +
+'・細かな規則性や細部に強くこだわることが少ない\n' +
+'・全体の流れを大まかに把握しながら物事を進めるスタイルが合っている\n\n' +
+'〇活かせる場面\n' +
+'・複数の情報を俯瞰して判断する場面\n' +
+'・優先順位をつけて動く場面'
+);
+} else {
+parts.push(
+'**「細部への関心」**は目安の値を大きく下回る結果でした。\n\n' +
+'〇強み・特徴\n' +
+'・細部への強いこだわりがない\n' +
+'・物事を大局的に捉えて柔軟に進めることが得意\n\n' +
+'〇活かせる場面\n' +
+'・全体の方向性を見定める場面\n' +
+'・変化に柔軟に対応する場面'
+);
+}
+}
+
+// ── コミュニケーション ──
+if (communication!= null) {
+if (gComm === 'vhigh') {
+parts.push(
+'**「コミュニケーション」**は目安の値を大きく上回る結果でした。\n\n' +
+'〇困りごと\n' +
+'・相手の言葉の裏にある意図や、表情・声のトーンから気持ちを読み取ることに、かなりの時間や労力がかかる場面が多い\n' +
+'・冗談や比喩表現を字義通りに受け取ってしまうことがある\n' +
+'・会話のテンポについていくことが難しく感じることが多い\n' +
+'・こうした状況が重なると、人との関わり自体に強い疲労感を覚えることがある\n\n' +
+'〇対策とアドバイス\n' +
+'・「わからなかったときは必ず確認する」というルールを自分に課す\n' +
+'・文字やメール等、テキストでのやり取りを積極的に活用する\n' +
+'・関わりの多い場面のあとには十分な休息を取る'
+);
+} else if (gComm === 'high') {
+parts.push(
+'**「コミュニケーション」**は目安の値を上回る結果でした。\n\n' +
+'〇困りごと\n' +
+'・相手の言葉の裏にある意図や、表情・声のトーンから気持ちを読み取ること\n' +
+'・冗談や比喩表現を字義通りに受け取ってしまう\n' +
+'・会話のテンポについていくのが難しく感じることがある\n\n' +
+'こうした傾向は、慎重さや言葉を大切にする姿勢の裏返しでもあります。\n\n' +
+'〇対策とアドバイス\n' +
+'・「よくわからなかったときは素直に確認する」というルールを自分に設けておく\n' +
+' →コミュニケーションの齟齬を減らすことができる\n' +
+'・周囲の人のコミュニケーションの取り方を観察し、良いところを取り入れる'
+);
+} else if (gComm === 'low') {
+parts.push(
+'**「コミュニケーション」**は目安の値を下回る結果でした。\n\n' +
+'〇強み・特徴\n' +
+'・言葉のやり取りが比較的スムーズに行えている\n' +
+'・相手の意図を読み取ったり、場に応じた言葉を選んだりすることが自然にできる\n\n' +
+'〇活かせる場面\n' +
+'・人と協力して物事を進める場面'
+);
+} else {
+parts.push(
+'**「コミュニケーション」**は目安の値を大きく下回る結果でした。\n\n' +
+'〇強み・特徴\n' +
+'・言葉を通じた人との関わりが非常にスムーズに行える\n' +
+'・相手の気持ちや場の雰囲気を素早く読み取り、適切な言葉を自然に選べる\n\n' +
+'〇活かせる場面\n' +
+'・対人関係全般'
+);
+}
+}
+
+// ── 想像力 ──
+if (imagination!= null) {
+if (gImag === 'vhigh') {
+parts.push(
+'**「想像力」**は目安の値を大きく上回る結果でした。\n\n' +
+'〇困りごと\n' +
+'・これから起こりそうな場面を頭の中でイメージすることに、強い難しさを感じる場面が多い\n' +
+'・相手の気持ちや立場を想像することに、強い難しさを感じる場面が多い\n' +
+'・突発的な出来事や先の見通しが立ちにくい状況では、強いストレスを感じやすい\n\n' +
+'〇対策とアドバイス\n' +
+'・事前に「もし〇〇になったら」というシナリオを複数用意しておく\n' +
+'・相手の気持ちを確認したいときは直接尋ねることを習慣にする\n' +
+'・先の見通しをできるだけ具体的にスケジュール化しておく'
+);
+} else if (gImag === 'high') {
+parts.push(
+'**「想像力」**は目安の値を上回る結果でした。\n\n' +
+'〇困りごと\n' +
+'・これから起こりそうな場面を頭の中でイメージすることに、やや難しさを感じる場面がある\n' +
+'・相手の気持ちや立場を想像することに、やや難しさを感じる場面がある\n' +
+'・突発的な出来事や、先の見通しが立ちにくい状況でストレスを感じやすい\n\n' +
+'〇対策とアドバイス\n' +
+'・事前に「もし〇〇になったら」というシナリオをいくつか考えておく'
+);
+} else if (gImag === 'low') {
+parts.push(
+'**「想像力」**は目安の値を下回る結果でした。\n\n' +
+'〇強み・特徴\n' +
+'・状況や相手の気持ちを想像することが比較的スムーズに行えている\n' +
+'・先の展開をある程度イメージしながら行動できる\n' +
+'・相手の立場に立って考えることが自然にできる\n\n' +
+'〇活かせる場面\n' +
+'・人との関係を円滑に保つ場面\n' +
+'・先を見通して計画的に動く場面'
+);
+} else {
+parts.push(
+'**「想像力」**は目安の値を大きく下回る結果でした。\n\n' +
+'〇強み・特徴\n' +
+'・状況や相手の気持ちを豊かにイメージできる力が非常に高い\n' +
+'・相手の立場や感情を自然に汲み取ることができる\n' +
+'・先の展開を見通すことができる\n\n' +
+'〇活かせる場面\n' +
+'・人との関係を深める場面\n' +
+'・創造的な場面で力を発揮する場面'
+);
+}
+}
+
+// ── 締め ──
+if (totalHigh && anyHigh) {
+parts.push(
+'全体として、今回の結果は対人関係や環境の変化への対応にやや負担を感じやすい特性があることを示しています。' +
+'こうした特性は努力や意欲の問題ではなく、生まれ持った情報処理の特徴によるものです。\n' +
+'自分の特性を理解し、合った環境や工夫を整えていくことで、日常のしづらさを少しずつ軽減していくことが可能です。' +
+'静かで予測しやすい環境を整える、苦手な場面では事前準備を丁寧に行う、' +
+'自分のペースを大切にできる時間を日常に組み込む、といった工夫が助けになるでしょう。' +
+'必要に応じて、心理的なサポートやカウンセリングを活用することも一つの選択肢です。'
+);
+} else if (anyHigh) {
+parts.push(
+'全体の得点は目安の値を下回っていますが、一部の下位項目に特徴が見られます。' +
+'こうした傾向はあくまで場面によって現れる可能性があるものです。\n' +
+'自分に合ったペースで日常と向き合い、負担を感じやすい場面では工夫やサポートを取り入れることで、' +
+'より過ごしやすい形を見つけていくことができるでしょう。'
+);
+} else {
+parts.push(
+'今回の結果では、各項目がおおむね目安の値を下回っており、対人面や環境への適応において比較的高い力が備わっていることが示されています。' +
+'自分の得意なことや強みを意識しながら、毎日をより自然体で、心地よく過ごせるでしょう。'
+);
+}
+
+return parts.join('\n\n');
+}
+
+// ── メイン ──────────────────────────────────
+function parseAndGenerate() {
+  const raw = document.getElementById('input-area').value.trim();
+  if (!raw) { alert('データを入力してください。'); return; }
+  const scores = parseScores(raw);
+  if (scores.total === null && scores.social === null) {
+    alert('スコアを読み取れませんでした。形式を確認してください。\n例: 総合　33点/50点（目安の値33点）');
+    return;
+  }
+  const sec = document.getElementById('findings-section');
+  sec.style.display = 'block';
+  sec.classList.add('fade-up');
+  document.getElementById('findings-area').value = generateFindings(scores);
+  setTimeout(() => sec.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+}
+
+function clearAll() {
+  document.getElementById('input-area').value = '';
+  document.getElementById('findings-section').style.display = 'none';
+}
+
+function copyFindings() {
+  const text = document.getElementById('findings-area').value;
+  navigator.clipboard.writeText(text).then(() => {
+    const fb = document.getElementById('copy-feedback');
+    fb.classList.add('show');
+    setTimeout(() => fb.classList.remove('show'), 2000);
+  }).catch(() => {
+    const ta = document.getElementById('findings-area');
+    ta.select();
+    document.execCommand('copy');
+  });
+}
+</script>
+</body>
+</html>
