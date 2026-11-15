@@ -16,9 +16,9 @@
       --surface: rgba(0,0,0,0.03);
       --surface-hover: rgba(0,0,0,0.06);
       --border: rgba(0,0,0,0.12);
-      --accent: #5b4de0;
-      --accent-glow: rgba(91,77,224,0.2);
-      --accent2: #0d9e7a;
+      --accent: #5da271;
+      --accent-glow: rgba(93,162,113,0.2);
+      --accent2: #e3b959;
       --text: #1a1a2e;
       --text-muted: #5a5870;
       --radius: 16px;
@@ -32,8 +32,8 @@
       min-height: 100vh;
       padding: 0 0 60px;
       background-image:
-        radial-gradient(ellipse at 20% 10%, rgba(91,77,224,0.05) 0%, transparent 55%),
-        radial-gradient(ellipse at 80% 90%, rgba(13,158,122,0.04) 0%, transparent 50%);
+        radial-gradient(ellipse at 20% 10%, rgba(93,162,113,0.05) 0%, transparent 55%),
+        radial-gradient(ellipse at 80% 90%, rgba(227,185,89,0.04) 0%, transparent 50%);
     }
     header {
       text-align: center;
@@ -55,8 +55,8 @@
       letter-spacing: 2px;
       text-transform: uppercase;
       color: var(--accent2);
-      background: rgba(91,229,197,0.1);
-      border: 1px solid rgba(91,229,197,0.25);
+      background: rgba(227,185,89,0.1);
+      border: 1px solid rgba(227,185,89,0.25);
       padding: 4px 14px;
       border-radius: 100px;
       margin-bottom: 16px;
@@ -129,11 +129,11 @@
       gap: 8px;
     }
     .btn-primary {
-      background: linear-gradient(135deg, var(--accent), #9d6ff7);
+      background: linear-gradient(135deg, var(--accent), #8cc09c);
       color: #fff;
-      box-shadow: 0 4px 16px rgba(124,106,247,0.35);
+      box-shadow: 0 4px 16px rgba(140,192,156,0.35);
     }
-    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(124,106,247,0.5); }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(140,192,156,0.5); }
     .btn-primary:active { transform: translateY(0); }
     .btn-secondary {
       background: var(--surface-hover);
@@ -142,11 +142,11 @@
     }
     .btn-secondary:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.18); }
     .btn-copy {
-      background: linear-gradient(135deg, #1f6f5c, var(--accent2));
+      background: linear-gradient(135deg, #c49b3f, var(--accent2));
       color: #fff;
-      box-shadow: 0 4px 16px rgba(91,229,197,0.25);
+      box-shadow: 0 4px 16px rgba(227,185,89,0.25);
     }
-    .btn-copy:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(91,229,197,0.4); }
+    .btn-copy:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(227,185,89,0.4); }
     .copy-feedback { font-size: 13px; color: var(--accent2); opacity: 0; transition: opacity 0.3s; }
     .copy-feedback.show { opacity: 1; }
     .section-divider { border: none; border-top: 1px solid var(--border); margin: 8px 0 20px; }
@@ -172,7 +172,7 @@
 <header>
   <div class="badge">心理検査ツール</div>
   <h1>AQ 所見ジェネレーター</h1>
-  <p class="subtitle">得点データをテキストで貼り付けると、箇条書きで所見文を自動で生成します</p>
+  <p class="subtitle">得点データをテキストで貼り付けると、所見文を自動で生成します</p>
 </header>
 
 <div class="container">
@@ -318,9 +318,11 @@ parts.push(
 '・初対面の相手との会話で強い緊張を感じやすい\n' +
 '・環境の刺激が多い場面や、複数の人と同時に関わる状況で特に目立ちやすい\n\n' +
 '〇対策とアドバイス\n' +
+'・振る舞いに迷う場面では、まず聞き役に回って周囲の様子を観察し、信頼できる人の動きを参考にする\n' +
 '・会話のパターンをあらかじめ複数準備しておく\n' +
+'・やり取りのあとには必ず一人でリセットできる時間を確保する\n' +
 '・人と関わる前に心の準備をする時間を設ける\n' +
-'・やり取りのあとには必ず一人でリセットできる時間を確保する'
+'・刺激の多い場や複数人と関わる場面では、静かな席を選んだり、途中離席できる形にしておく'
 );
 } else if (gSocial === 'high') {
 parts.push(
@@ -330,8 +332,9 @@ parts.push(
 '・その場にふさわしい話題を思いつくことが難しい\n' +
 '・人との関わりのあとに疲れを感じやすかったり、初対面の相手との会話で緊張しやすい\n\n' +
 '〇対策とアドバイス\n' +
-'・よく聞かれる質問の答えを事前に考えておく\n' +
-'・人と関わる場面の前後に一人でリセットできる時間を設ける'
+'・振る舞いに迷う場面では、まず聞き役に回って周囲の様子を観察し、信頼できる人の動きを参考にする\n' +
+'・自己紹介やよく聞かれる質問への答えを事前に用意しておき、話題のきっかけを作っておく\n' +
+'・人と関わる場面の前後に一人でリセットできる時間を設け、初対面の場では早めに切り上げる選択肢も持っておく'
 );
 } else if (gSocial === 'low') {
 parts.push(
@@ -366,9 +369,9 @@ parts.push(
 '・急な予定変更や割り込みの作業が生じたとき、気持ちの切り替えにかなりの時間とエネルギーを要することがある\n' +
 '・決まったやり方や手順が変わることへの抵抗感が強く、変化の多い環境では消耗しやすい\n\n' +
 '〇対策とアドバイス\n' +
-'・同じことを繰り返しやすい職場環境を選ぶ\n' +
 '・1日の流れをできるだけルーティン化する\n' +
-'・変更が生じる可能性がある場合は、あらかじめ複数のシナリオを準備しておく'
+'・変更が生じる可能性がある場合は、あらかじめ複数のシナリオを準備しておく\n' +
+'・同じことを繰り返しやすい職場環境を選ぶ'
 );
 } else if (gAttn === 'high') {
 parts.push(
@@ -417,8 +420,8 @@ parts.push(
 '・刺激が多い環境では疲弊しやすくなることがある\n\n' +
 '〇対策とアドバイス\n' +
 '・イヤホンや仕切りを使って刺激を積極的に遮断する\n' +
-'・細部への気づきを活かせる役割（確認作業・品質管理・校正など）を意識的に担う\n' +
-'・刺激の少ない落ち着いた環境で作業できるよう整える'
+'・刺激の少ない落ち着いた環境で作業できるよう整える\n' +
+'・細部への気づきを活かせる役割（確認作業・品質管理・校正など）を意識的に担う'
 );
 } else if (gDetail === 'high') {
 parts.push(
@@ -467,6 +470,7 @@ parts.push(
 '・こうした状況が重なると、人との関わり自体に強い疲労感を覚えることがある\n\n' +
 '〇対策とアドバイス\n' +
 '・「わからなかったときは必ず確認する」というルールを自分に課す\n' +
+'・冗談や比喩表現で迷ったときは、字義通りの受け取りで合っているか相手に確認する\n' +
 '・文字やメール等、テキストでのやり取りを積極的に活用する\n' +
 '・関わりの多い場面のあとには十分な休息を取る'
 );
@@ -481,6 +485,7 @@ parts.push(
 '〇対策とアドバイス\n' +
 '・「よくわからなかったときは素直に確認する」というルールを自分に設けておく\n' +
 ' →コミュニケーションの齟齬を減らすことができる\n' +
+'・冗談や比喩表現で迷ったときは、字義通りの意味で合っているか確認する\n' +
 '・周囲の人のコミュニケーションの取り方を観察し、良いところを取り入れる'
 );
 } else if (gComm === 'low') {
@@ -526,7 +531,9 @@ parts.push(
 '・相手の気持ちや立場を想像することに、やや難しさを感じる場面がある\n' +
 '・突発的な出来事や、先の見通しが立ちにくい状況でストレスを感じやすい\n\n' +
 '〇対策とアドバイス\n' +
-'・事前に「もし〇〇になったら」というシナリオをいくつか考えておく'
+'・事前に「もし〇〇になったら」というシナリオをいくつか考えておく\n' +
+'・相手の気持ちを確認したいときは、想像で補わず直接尋ねる\n' +
+'・先の予定は、見通しを具体的にスケジュールに書き出しておく'
 );
 } else if (gImag === 'low') {
 parts.push(
